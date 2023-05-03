@@ -78,9 +78,7 @@ export class UserService {
       },
     });
 
-    if (!exist) {
-      throw new NotFoundException(`Usuário ${id} não encontrado.`);
-    }
+    this.userNotFound(id, exist);
 
     return exist;
   }
