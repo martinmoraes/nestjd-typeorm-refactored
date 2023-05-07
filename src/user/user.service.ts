@@ -1,104 +1,97 @@
 import {
   BadRequestException,
   Injectable,
+  Logger,
   NotFoundException,
 } from '@nestjs/common';
 import { CreateUserDTO } from './dto/create-user-dto';
-import { Repository } from 'typeorm';
-import { UserEntity } from './entity/user.entity';
-import { InjectRepository } from '@nestjs/typeorm';
 import { UpdateUserDTO } from './dto/update-user-dto';
+import { UserTypeORMRepository } from '../adapters/repository/typeorm/user-typeorm.repository';
+import { ShowMessageService } from '../show-message/show-message.service';
 
 @Injectable()
 export class UserService {
+  private readonly logger = new Logger(UserService.name);
+
   constructor(
-    @InjectRepository(UserEntity)
-    private usersRepository: Repository<UserEntity>,
+    private readonly usersRepository: UserTypeORMRepository,
+    private readonly message: ShowMessageService,
   ) {}
 
-  async create(userDTO: CreateUserDTO) {
-    const existsEmail = await this.usersRepository.exist({
-      where: {
-        email: userDTO.email,
-      },
-    });
+  async create(userDTO: CreateUserDTO): Promise<Record<string, any>> {
+    const existsEmail = await this.usersRepository.existsEMail(userDTO.email);
 
     if (existsEmail) {
-      throw new BadRequestException(`E-Mail ${userDTO.email}, já cadastrado.`);
+      const message = `E-Mail ${userDTO.email}, já cadastrado.`;
+      this.logger.error(message);
+      throw new BadRequestException(message);
     }
 
-    const user = this.usersRepository.create(userDTO);
-    return this.usersRepository.save(user);
+    return this.usersRepository.create(userDTO);
   }
 
-  async update(id: number, userDTO: UpdateUserDTO) {
-    await this.existsID(id);
-    await this.checkEmailWithID(userDTO.email, id);
+  async update(
+    id: number,
+    userDTO: UpdateUserDTO,
+  ): Promise<{ id: number; realized: boolean }> {
+    const existsID = await this.usersRepository.existsID(id);
+    if (existsID) {
+      this.userNotFound(id, existsID);
+    }
+
+    const existsEmailEndID = await this.usersRepository.existsEmailWithID(
+      userDTO.email,
+      id,
+    );
+    if (!existsEmailEndID) {
+      const message = `E-Mail ${userDTO.email} já em uso.`;
+      this.logger.error(message);
+      throw new BadRequestException(message);
+    }
 
     const updated = await this.usersRepository.update(id, userDTO);
 
-    return { id, updated: updated.affected > 0 };
+    return updated;
   }
 
-  async list() {
-    const users = await this.usersRepository.find();
+  async list(): Promise<Record<string, any>[]> {
+    const users = await this.usersRepository.findAll();
 
-    return { users };
+    return users;
   }
 
-  async show(id: number) {
-    const user = await this.usersRepository.find({
-      where: {
-        id,
-      },
-    });
-
-    console.log(user);
+  async show(id: number): Promise<Record<string, any>[]> {
+    const user = await this.usersRepository.findID(id);
 
     this.userNotFound(id, user.length);
 
-    return { user };
+    return user;
   }
 
-  async delete(id: number) {
+  async delete(id: number): Promise<{ id: number; realized: boolean }> {
     const deleted = await this.usersRepository.delete(id);
 
-    this.userNotFound(id, !deleted.affected);
+    this.userNotFound(id, !deleted.realized);
 
-    return {
-      id,
-      affected: deleted.affected > 0,
-    };
-  }
-
-  async existsID(id: number) {
-    const exist = await this.usersRepository.exist({
-      where: {
-        id,
-      },
-    });
-
-    this.userNotFound(id, exist);
-
-    return exist;
-  }
-
-  async checkEmailWithID(email: string, id: number) {
-    const existEmailWithID = await this.usersRepository.exist({
-      where: {
-        id,
-        email,
-      },
-    });
-
-    if (!existEmailWithID) {
-      throw new BadRequestException(`E-Mail ${email} já em uso.`);
-    }
+    return deleted;
   }
 
   userNotFound(id: number, result: boolean | number) {
     if (!result) {
-      throw new NotFoundException(`Usuário ${id} não encontrado.`);
+      const message = `Usuário ${id} não encontrado.`;
+      this.logger.error(message);
+      throw new NotFoundException(message);
     }
+  }
+
+  showMessage(): {
+    time: number;
+    messageReceived: string;
+  } {
+    const messageReceived = this.message.showMessage();
+    return {
+      time: new Date().getTime(),
+      messageReceived,
+    };
   }
 }

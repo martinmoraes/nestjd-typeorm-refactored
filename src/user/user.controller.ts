@@ -11,6 +11,7 @@ import {
 import { CreateUserDTO } from './dto/create-user-dto';
 import { UpdateUserDTO } from './dto/update-user-dto';
 import { UserService } from './user.service';
+import { get } from 'http';
 
 @Controller('users')
 export class UserController {
@@ -24,6 +25,11 @@ export class UserController {
   @Get()
   async list() {
     return await this.userService.list();
+  }
+
+  @Get('message')
+  getMessage() {
+    return this.userService.showMessage();
   }
 
   @Get(':id')
