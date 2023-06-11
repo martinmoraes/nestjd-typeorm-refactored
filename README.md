@@ -11,8 +11,12 @@ $ npm install
 ## MySQL - Docker
 
 ```bash
-# creat container
+# create/start container
 $ docker run -it --name mysql -p 3306:3306 -v test-mysql:/var/lib/mysql -e MYSQL_ROOT_PASSWORD=qwerty -d mysql
+
+or
+
+$ docker start mysql
 
 # access the container
 $ docker exec -it mysql bash

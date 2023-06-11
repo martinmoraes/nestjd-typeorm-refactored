@@ -1,12 +1,12 @@
-import { Module } from '@nestjs/common';
+import { Module, OnModuleInit } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { UserTypeORMRepository } from './user-typeorm.repository';
-import { UserEntity } from './entity/user.entity';
+import { UserEntity } from '../../../user/entity/user.entity';
 
 @Module({
   imports: [
-    ConfigModule.forRoot(),
+    // ConfigModule.forRoot(),
     TypeOrmModule.forRoot({
       type: 'mysql',
       host: process.env.DB_HOST,
@@ -24,4 +24,8 @@ import { UserEntity } from './entity/user.entity';
   providers: [UserTypeORMRepository],
   exports: [UserTypeORMRepository],
 })
-export class TypeORMConfigModule {}
+export class TypeORMConfigModule implements OnModuleInit {
+  onModuleInit() {
+    console.log(process.env.DB_HOST);
+  }
+}

@@ -1,0 +1,21 @@
+{
+  "code-runner.ignoreSelection": true,
+  "code-runner.runInTerminal": true,
+  "code-runner.saveAllFilesBeforeRun": true,
+  "code-runner.saveFileBeforeRun": true,
+  "code-runner.fileDirectoryAsCwd": true,
+  "code-runner.preserveFocus": false,
+  "code-runner.clearPreviousOutput": true,
+  "code-runner.showExecutionMessage": true,
+  "code-runner.defaultLanguage": "typescript",
+  "code-runner.customCommand": "npm run start:dev",
+  "code-runner.selector": "*.ts",
+  "code-runner.commands": [
+    {
+      "command": "npm:runStartDev",
+      "isShellCommand": true,
+      "match": "(?i)^npm\\srun\\sstart:dev$",
+      "cwd": "${fileDirname}"
+    }
+  ]
+}

@@ -1,12 +1,12 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { UserEntity } from './entity/user.entity';
+import { UserEntity } from '../../../user/entity/user.entity';
 import { Repository } from 'typeorm';
 import { CreateUserDTO } from '../../../user/dto/create-user-dto';
 import { UpdateUserDTO } from '../../../user/dto/update-user-dto';
 import { UserInterfaceRepository } from '../../../user/interface/user-interface-repository';
-import { UserDTO } from '../../../user/dto/user-dto';
 import { instanceToPlain, plainToClass } from 'class-transformer';
+import { UserInterfaceCreated } from '../../../user/interface/user-interface-created';
 
 @Injectable()
 export class UserTypeORMRepository implements UserInterfaceRepository {
@@ -39,19 +39,23 @@ export class UserTypeORMRepository implements UserInterfaceRepository {
     return { id, realized: deleted.affected > 0 };
   }
 
-  async findAll(): Promise<Record<string, any>[]> {
+  async findAll(): Promise<UserInterfaceCreated[]> {
     const usersEntity = await this.usersEntityRepository.find();
-    return instanceToPlain<UserEntity>(usersEntity);
+    const userPlain = instanceToPlain<UserEntity>(usersEntity);
+
+    console.log(userPlain);
+
+    return userPlain as UserInterfaceCreated[];
   }
 
-  async findID(id: number): Promise<Record<string, any>[]> {
+  async findID(id: number): Promise<UserInterfaceCreated[]> {
     const usersEntity = await this.usersEntityRepository.find({
       where: {
         id,
       },
     });
 
-    return instanceToPlain<UserEntity>(usersEntity);
+    return instanceToPlain<UserEntity>(usersEntity) as UserInterfaceCreated[];
   }
 
   async existsID(id: number): Promise<boolean> {
@@ -77,5 +81,15 @@ export class UserTypeORMRepository implements UserInterfaceRepository {
         email,
       },
     });
+  }
+
+  async findByEMail(email: string): Promise<UserInterfaceCreated[]> {
+    const usersEntity = await this.usersEntityRepository.find({
+      where: {
+        email,
+      },
+    });
+
+    return instanceToPlain<UserEntity>(usersEntity) as UserInterfaceCreated[];
   }
 }
